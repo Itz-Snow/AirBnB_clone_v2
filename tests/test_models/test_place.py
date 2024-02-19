@@ -1,69 +1,80 @@
 #!/usr/bin/python3
-""" """
-from tests.test_models.test_base_model import test_basemodel
-from models.place import Place
+""" Place instance with a city_id, amenities and reviews """
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Table
+from models.base_model import BaseModel, Base
+from os import getenv
+from models.review import Review
+from sqlalchemy.orm import relationship
+
+STORAGE = getenv("HBNB_TYPE_STORAGE")
 
 
-class test_Place(test_basemodel):
-    """ """
+class Place(BaseModel, Base):
+    """ A place to stay """
+    __tablename__ = 'places'
+    if STORAGE == "db":
+        city_id = Column(String(60), ForeignKey('cities.id'), nullable=False)
+        user_id = Column(String(60), ForeignKey('users.id'), nullable=False)
+        name = Column(String(128), nullable=False)
+        description = Column(String(1024), nullable=True)
+        number_rooms = Column(Integer, nullable=False, default=0)
+        number_bathrooms = Column(Integer, nullable=False, default=0)
+        max_guest = Column(Integer, nullable=False, default=0)
+        price_by_night = Column(Integer, nullable=False, default=0)
+        latitude = Column(Float, nullable=True)
+        longitude = Column(Float, nullable=True)
+        reviews = relationship('Review',
+                               backref='place',
+                               cascade="all, delete")
 
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = "Place"
-        self.value = Place
+        place_amenity = Table('place_amenity', Base.metadata,
+                              Column('place_id', String(60),
+                                     ForeignKey('places.id'),
+                                     primary_key=True, nullable=False),
+                              Column('amenity_id', String(60),
+                                     ForeignKey('amenities.id'),
+                                     primary_key=True, nullable=False))
 
-    def test_city_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.city_id), str)
+        amenities = relationship('Amenity', secondary=place_amenity,
+                                 viewonly=False, backref="places")
 
-    def test_user_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.user_id), str)
+    else:
+        city_id = ""
+        user_id = ""
+        name = ""
+        description = ""
+        number_rooms = 0
+        number_bathrooms = 0
+        max_guest = 0
+        price_by_night = 0
+        latitude = 0.0
+        longitude = 0.0
+        amenity_ids = []
 
-    def test_name(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.name), str)
+        @property
+        def reviews(self):
+            from models import storage
+            list_review = []
+            all_rev = storage.all(Review)
+            for value in all_rev.values():
+                if value.place_id == self.id:
+                    list_review.append(value)
+            return list_review
 
-    def test_description(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.description), str)
+        @property
+        def amenities(self):
+            from models import storage
+            from models.amenity import Amenity
+            list_amenity = []
+            all_ameni = storage.all(Amenity)
+            for value in all_ameni.values():
+                if value.id == self.amenity_ids:
+                    list_amenity.append(value)
+            return list_amenity
 
-    def test_number_rooms(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.number_rooms), int)
-
-    def test_number_bathrooms(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.number_bathrooms), int)
-
-    def test_max_guest(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.max_guest), int)
-
-    def test_price_by_night(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.price_by_night), int)
-
-    def test_latitude(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.latitude), float)
-
-    def test_longitude(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.latitude), float)
-
-    def test_amenity_ids(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.amenity_ids), list)
+        @amenities.setter
+        def amenities(self, value):
+            from models import storage
+            from models.amenity import Amenity
+            if type(value) == Amenity:
+                self.amenity_ids.append(value.id)

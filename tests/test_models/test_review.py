@@ -1,29 +1,22 @@
 #!/usr/bin/python3
-""" """
-from tests.test_models.test_base_model import test_basemodel
-from models.review import Review
+""" Review module for the HBNB project """
+from sqlalchemy import Column, Integer, String, ForeignKey
+from models.base_model import BaseModel, Base
+from os import getenv
+from sqlalchemy.orm import relationship
+
+STORAGE = getenv("HBNB_TYPE_STORAGE")
 
 
-class test_review(test_basemodel):
-    """ """
+class Review(BaseModel, Base):
+    """ Review class to store review information """
+    __tablename__ = "reviews"
+    if STORAGE == "db":
+        place_id = Column(String(60), ForeignKey('places.id'), nullable=False)
+        user_id = Column(String(60), ForeignKey('users.id'), nullable=False)
+        text = Column(String(1024), nullable=False)
 
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = "Review"
-        self.value = Review
-
-    def test_place_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.place_id), str)
-
-    def test_user_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.user_id), str)
-
-    def test_text(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.text), str)
+    else:
+        place_id = ""
+        user_id = ""
+        text = ""

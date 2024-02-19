@@ -1,34 +1,27 @@
 #!/usr/bin/python3
-""" """
-from tests.test_models.test_base_model import test_basemodel
-from models.user import User
+"""This module defines a class User"""
+from sqlalchemy import Column, Integer, String
+from models.base_model import BaseModel, Base
+from os import getenv
+from sqlalchemy.orm import relationship
+
+STORAGE = getenv("HBNB_TYPE_STORAGE")
 
 
-class test_User(test_basemodel):
-    """ """
-
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = "User"
-        self.value = User
-
-    def test_first_name(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.first_name), str)
-
-    def test_last_name(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.last_name), str)
-
-    def test_email(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.email), str)
-
-    def test_password(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.password), str)
+class User(BaseModel, Base):
+    """This class defines a user by various attributes"""
+    __tablename__ = "users"
+    if STORAGE == "db":
+        email = Column(String(128), nullable=False)
+        password = Column(String(128), nullable=False)
+        first_name = Column(String(128), nullable=True)
+        last_name = Column(String(128), nullable=True)
+        places = relationship('Place', backref='user',
+                              cascade="all, delete-orphan")
+        reviews = relationship('Review', backref='user',
+                               cascade="all, delete-orphan")
+    else:
+        email = ""
+        password = ""
+        first_name = ""
+        last_name = ""

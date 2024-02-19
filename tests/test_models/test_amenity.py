@@ -1,19 +1,21 @@
 #!/usr/bin/python3
-""" """
-from tests.test_models.test_base_model import test_basemodel
-from models.amenity import Amenity
+""" instances amenities """
+from models.base_model import BaseModel, Base
+from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy.orm import relationship
+from models.place import Place
+from os import getenv
+
+STORAGE = getenv("HBNB_TYPE_STORAGE")
 
 
-class test_Amenity(test_basemodel):
-    """ """
+class Amenity(BaseModel, Base):
+    """Permit to add the amenities for places"""
+    __tablename__ = "amenities"
+    if STORAGE == "db":
+        name = Column(String(128), nullable=False)
+        place_amenities = relationship(
+            'Place', secondary=Place.place_amenity)
 
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = "Amenity"
-        self.value = Amenity
-
-    def test_name2(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.name), str)
+    else:
+        name = ""

@@ -1,24 +1,22 @@
 #!/usr/bin/python3
-""" """
-from tests.test_models.test_base_model import test_basemodel
-from models.city import City
+""" City Module instances cities with ids """
+from sqlalchemy import Column, Integer, String, ForeignKey
+from models.base_model import BaseModel, Base
+from os import getenv
+from sqlalchemy.orm import relationship
+
+STORAGE = getenv("HBNB_TYPE_STORAGE")
 
 
-class test_City(test_basemodel):
-    """ """
-
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = "City"
-        self.value = City
-
-    def test_state_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.state_id), str)
-
-    def test_name(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.name), str)
+class City(BaseModel, Base):
+    """ The city class, contains state ID and name """
+    __tablename__ = 'cities'
+    if STORAGE == "db":
+        state_id = Column(String(60), ForeignKey('states.id'), nullable=False)
+        name = Column(String(128), nullable=False)
+        places = relationship('Place',
+                              backref='cities',
+                              cascade="all, delete-orphan")
+    else:
+        name = ""
+        state_id = ""
